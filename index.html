@@ -1,2 +1,100 @@
-Telegram.WebApp.ready();
-Telegram.WebApp.requestEmojiStatusAccess(); // Запрос разрешения
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статус бот</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            background: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+            text-align: center;
+        }
+        button {
+            background: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #fff);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 300px;
+        }
+        button:disabled {
+            opacity: 0.5;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Установить статус</h1>
+    <p>Нажмите кнопку, чтобы разрешить боту менять ваш статус</p>
+
+    <button id="requestBtn">📱 Запросить разрешение</button>
+    <button id="setBtn" disabled>✨ Установить статус</button>
+
+    <div id="status">Ожидание действия...</div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // Растянуть на весь экран
+
+        const statusDiv = document.getElementById('status');
+        const requestBtn = document.getElementById('requestBtn');
+        const setBtn = document.getElementById('setBtn');
+
+        // 1. Запрос разрешения на установку статуса
+        requestBtn.addEventListener('click', function() {
+            statusDiv.textContent = '⏳ Запрашиваем разрешение...';
+            
+            try {
+                tg.requestEmojiStatusAccess(); // Запрос к Telegram
+                statusDiv.textContent = '✅ Разрешение запрошено! Проверьте диалог в Telegram';
+                requestBtn.disabled = true;
+                setBtn.disabled = false;
+            } catch(e) {
+                statusDiv.textContent = '❌ Ошибка: ' + e.message;
+            }
+        });
+
+        // 2. Установка статуса (бот должен получить данные)
+        setBtn.addEventListener('click', function() {
+            statusDiv.textContent = '⏳ Отправка запроса боту...';
+            
+            // Отправляем команду боту через WebApp
+            tg.sendData(JSON.stringify({
+                action: 'set_status',
+                emoji_id: '5339313994459000596' // Замените на ваш ID эмодзи
+            }));
+            
+            statusDiv.textContent = '✅ Команда отправлена! Бот установит статус';
+            setBtn.disabled = true;
+        });
+
+        // Обработка ответа от бота (опционально)
+        tg.onEvent('mainButtonClicked', function() {
+            statusDiv.textContent = '🔘 Нажата главная кнопка';
+        });
+
+        // Если бот что-то прислал обратно
+        tg.onEvent('viewportChanged', function() {
+            // Можно добавить логику
+        });
+
+        console.log('Mini App готов к работе!');
+    </script>
+</body>
+</html>
